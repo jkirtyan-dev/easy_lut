@@ -39,7 +39,7 @@ class EasyLUT {
 
     List<String> lines;
 
-    if (file.path.endsWith('.png')) {
+    if (file.path.endsWith('.png') || file.path.endsWith('.bmp')) {
       lines = await _convertLUTImage(file);
     } else {
       lines = await file.readAsLines();
@@ -128,7 +128,6 @@ class EasyLUT {
   }
 
   bool _isLineSeems1DLUTData(String line) => int.tryParse(line) != null;
-
   bool _isLineSeems3DLUTData(String line) =>
       line.split(' ').every((n) => double.tryParse(n.trim()) != null);
 
@@ -215,26 +214,55 @@ class EasyLUT {
     if (image.height != image.width) return [];
 
     final imageSize = image.width;
-    final size = sqrt(imageSize).round();
+    final size = pow(imageSize, 2 / 3.0).round();
 
     final lines = [
       'TITLE ${_titleFromPath(file.path)}',
       'LUT_3D_SIZE $size',
     ];
 
-    for (int i = 0; i < imageSize; i += size) {
-      for (int j = 0; j < imageSize; j += size) {
+    for (int j = 0; j < imageSize; j += size) {
+      for (int i = 0; i < imageSize; i += size) {
         for (int y = 0; y < size; ++y) {
           for (int x = 0; x < size; ++x) {
             final color = image.getPixel(i + x, j + y);
 
             lines.add(
-                '${color.rNormalized} ${color.gNormalized} ${color.bNormalized}');
+                '${color.rNormalized.toStringAsFixed(6)} ${color.gNormalized.toStringAsFixed(6)} ${color.bNormalized.toStringAsFixed(6)}');
           }
         }
       }
     }
 
     return lines;
+  }
+
+  /// Converts 3D LUT to image
+  Uint8List convertLUTtoBMP(ThreeDimensionLUT lut) {
+    final lutSize = lut.data.length;
+
+    final imageSize = pow(lutSize, 3 / 2.0).ceil();
+    final image = Image(width: imageSize, height: imageSize);
+
+    int x = 0;
+    int y = 0;
+
+    final squareCount = sqrt(lutSize).round();
+    for (int i = 0; i < lutSize; ++i) {
+      for (int j = 0; j < lutSize; ++j) {
+        for (int k = 0; k < lutSize; ++k) {
+          final color = lut.data[i][j][k];
+
+          x = (i % squareCount) * lutSize + k;
+          y = (i ~/ squareCount) * lutSize + j;
+
+          if (x < imageSize && y < imageSize) {
+            image.setPixelRgb(x, y, _red(color), _green(color), _blue(color));
+          }
+        }
+      }
+    }
+
+    return encodeBmp(image);
   }
 }

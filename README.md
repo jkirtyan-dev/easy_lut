@@ -52,6 +52,9 @@ Future<Uint8List?> applyLUTonFile(LUT lut, File file)
 /// The original file will not change
 /// returns with the result imageData
 Future<Uint8List?> applyLUTonPath(LUT lut, String path)
+
+/// Converts 3D LUT to image
+Uint8List convertLUTtoBMP(ThreeDimensionLUT lut)
 ```
 
 ## Additional information

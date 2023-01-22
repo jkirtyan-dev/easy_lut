@@ -6,7 +6,6 @@ void main() async {
   final imageData = await File('card_1.png').readAsBytes();
 
   final lutPaths = [
-    'neutral-lut.png',
     'InverseLUT',
     '1DummyLUT',
     'LBK-K-Tone_33.cube',
@@ -15,18 +14,30 @@ void main() async {
   final easyLUT = EasyLUT();
 
   for (var path in lutPaths) {
-    final lut = await easyLUT.parseLUTWithPath(path);
+    LUT lut;
+
+    try {
+      lut = await easyLUT.parseLUTWithPath(path);
+    } catch (err) {
+      print('ERROR: Skipped $path\n$err');
+      continue;
+    }
+
+    final fileName = lut.title
+        .replaceAll(' ', '_')
+        .replaceAll('"', '')
+        .replaceAll('(', '')
+        .replaceAll(')', '')
+        .replaceAll('-', '_');
+
+    if (lut is ThreeDimensionLUT) {
+      final lutBMP = easyLUT.convertLUTtoBMP(lut);
+      await File('${fileName}_lut.bmp').writeAsBytes(lutBMP);
+    }
 
     final newImageData = easyLUT.applyLUT(lut, imageData);
 
     if (newImageData != null) {
-      final fileName = lut.title
-          .replaceAll(' ', '_')
-          .replaceAll('"', '')
-          .replaceAll('(', '')
-          .replaceAll(')', '')
-          .replaceAll('-', '_');
-
       await File('$fileName.png').writeAsBytes(newImageData);
     }
   }
