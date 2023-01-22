@@ -14,7 +14,8 @@ abstract class LUT<D> {
 
   LUT(this.title, this.data);
 
-  LUTType get _dataType => data is OneDimensionData ? LUTType.oneDimension : LUTType.threeDimensions;
+  LUTType get _dataType =>
+      data is OneDimensionData ? LUTType.oneDimension : LUTType.threeDimensions;
 }
 
 class OneDimensionLUT extends LUT<OneDimensionData> {
@@ -26,8 +27,10 @@ class ThreeDimensionLUT extends LUT<ThreeDimensionData> {
 }
 
 class EasyLUT {
+  /// Parse LUT data with file path
   Future<LUT> parseLUTWithPath(String path) => parseLUTWithFile(File(path));
 
+  /// Parse LUT data with file path
   Future<LUT> parseLUTWithFile(File file) async {
     LUTType? type;
     int firstDataIndex = 0;
@@ -89,8 +92,8 @@ class EasyLUT {
   }
 
   ThreeDimensionLUT _parse3DLUT(String title, int size, List<String> lines) {
-    List<List<List<int>>> lutData =
-        List.generate(size, (_) => List.generate(size, (_) => List.generate(size, (_) => 0)));
+    List<List<List<int>>> lutData = List.generate(
+        size, (_) => List.generate(size, (_) => List.generate(size, (_) => 0)));
 
     int i = 0;
     for (int x = 0; x < size; ++x) {
@@ -126,15 +129,31 @@ class EasyLUT {
 
   bool _isLineSeems1DLUTData(String line) => int.tryParse(line) != null;
 
-  bool _isLineSeems3DLUTData(String line) => line.split(' ').every((n) => double.tryParse(n.trim()) != null);
+  bool _isLineSeems3DLUTData(String line) =>
+      line.split(' ').every((n) => double.tryParse(n.trim()) != null);
 
+  /// Apply LUT data on imageData and returns with the result imageData
   Uint8List? applyLUT(LUT lut, Uint8List imageData) {
-    if (lut._dataType == LUTType.oneDimension) return _apply1DLUT(lut as OneDimensionLUT, imageData);
-    if (lut._dataType == LUTType.threeDimensions) return _apply3DLUT(lut as ThreeDimensionLUT, imageData);
+    if (lut._dataType == LUTType.oneDimension) {
+      return _apply1DLUT(lut as OneDimensionLUT, imageData);
+    }
+    if (lut._dataType == LUTType.threeDimensions) {
+      return _apply3DLUT(lut as ThreeDimensionLUT, imageData);
+    }
     return null;
   }
-  Future<Uint8List?> applyLUTonFile(LUT lut, File file) => file.readAsBytes().then((data) => applyLUT(lut, data));
-  Future<Uint8List?> applyLUTonPath(LUT lut, String path) => applyLUTonFile(lut, File(path));
+
+  /// Apply LUT data on file
+  /// The original file will not change
+  /// returns with the result imageData
+  Future<Uint8List?> applyLUTonFile(LUT lut, File file) =>
+      file.readAsBytes().then((data) => applyLUT(lut, data));
+
+  /// Apply LUT data on file path
+  /// The original file will not change
+  /// returns with the result imageData
+  Future<Uint8List?> applyLUTonPath(LUT lut, String path) =>
+      applyLUTonFile(lut, File(path));
 
   Uint8List? _apply1DLUT(OneDimensionLUT lut, Uint8List imageData) {
     final image = decodeImage(imageData);
@@ -185,11 +204,8 @@ class EasyLUT {
   }
 
   int _color(int r, int g, int b) => (r << 16) | (g << 8) | b;
-
   int _red(int color) => (color >> 16) & 0xFF;
-
   int _green(int color) => (color >> 8) & 0xFF;
-
   int _blue(int color) => color & 0xFF;
 
   Future<List<String>> _convertLUTImage(File file) async {
@@ -212,7 +228,8 @@ class EasyLUT {
           for (int x = 0; x < size; ++x) {
             final color = image.getPixel(i + x, j + y);
 
-            lines.add('${color.rNormalized} ${color.gNormalized} ${color.bNormalized}');
+            lines.add(
+                '${color.rNormalized} ${color.gNormalized} ${color.bNormalized}');
           }
         }
       }

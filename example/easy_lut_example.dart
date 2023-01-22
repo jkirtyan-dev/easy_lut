@@ -27,8 +27,7 @@ void main() async {
           .replaceAll(')', '')
           .replaceAll('-', '_');
 
-      await File('$fileName.png')
-          .writeAsBytes(newImageData);
+      await File('$fileName.png').writeAsBytes(newImageData);
     }
   }
 }
