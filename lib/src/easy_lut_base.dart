@@ -133,13 +133,22 @@ class EasyLUT {
 
   /// Apply LUT data on imageData and returns with the result imageData
   Uint8List? applyLUT(LUT lut, Uint8List imageData) {
+    Image? image = decodeImage(imageData);
+
+    if (image == null) return null;
+
+    image = applyLUTOnImage(lut, image);
+
+    return encodePng(image);
+  }
+
+  /// Apply LUT data on image and returns with the result image
+  Image applyLUTOnImage(LUT lut, Image image) {
     if (lut._dataType == LUTType.oneDimension) {
-      return _apply1DLUT(lut as OneDimensionLUT, imageData);
+      return _apply1DLUT(lut as OneDimensionLUT, image);
     }
-    if (lut._dataType == LUTType.threeDimensions) {
-      return _apply3DLUT(lut as ThreeDimensionLUT, imageData);
-    }
-    return null;
+
+    return _apply3DLUT(lut as ThreeDimensionLUT, image);
   }
 
   /// Apply LUT data on file
@@ -154,11 +163,7 @@ class EasyLUT {
   Future<Uint8List?> applyLUTonPath(LUT lut, String path) =>
       applyLUTonFile(lut, File(path));
 
-  Uint8List? _apply1DLUT(OneDimensionLUT lut, Uint8List imageData) {
-    final image = decodeImage(imageData);
-
-    if (image == null) return null;
-
+  Image _apply1DLUT(OneDimensionLUT lut, Image image) {
     for (int x = 0; x < image.width; x++) {
       for (int y = 0; y < image.height; y++) {
         final color = image.getPixel(x, y);
@@ -172,14 +177,10 @@ class EasyLUT {
       }
     }
 
-    return encodePng(image);
+    return image;
   }
 
-  Uint8List? _apply3DLUT(ThreeDimensionLUT lut, Uint8List imageData) {
-    final image = decodeImage(imageData);
-
-    if (image == null) return null;
-
+  Image _apply3DLUT(ThreeDimensionLUT lut, Image image) {
     final size = lut.data.length;
 
     for (int x = 0; x < image.width; x++) {
@@ -199,7 +200,7 @@ class EasyLUT {
       }
     }
 
-    return encodePng(image);
+    return image;
   }
 
   int _color(int r, int g, int b) => (r << 16) | (g << 8) | b;
